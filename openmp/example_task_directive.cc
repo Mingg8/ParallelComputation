@@ -14,26 +14,27 @@ int main() {
 	struct timeval tv1, tv2;
 	struct timezone tz;
 	double elapsed;
-	for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++)
-		{
-			A[i][j] = 2;
-		}
-		x[i] = 2;
+
+	int op = 1;
+	int i = 0;
+	double target = 0;
+
+	#pragma omp parallel shared(A, coord, op, target) {
+	    #pragma omp master {
+	        while (op  && i < 50) {
+	            for (j = 0; j < 10000; j++) {
+	                if (a[i][j] == target) {
+	                    coord[0] = i;
+	                    coord[1] = j;
+	                    op = 0;
+	                }
+	            }
+	            i++;
+	        }
+	    }
 	}
-    #pragma omp parallel
-    {
-        int i, k;
-        double sum;
-        gettimeofday(&tv1, &tz);
-        #pragma omp for private(i, k, sum)
-        for (i=0; i < N; i++) {
-            sum = 0.0;
-            for (k = 0; k < N; k++)
-                sum += A[i][k]*x[k];
-            y[i] = sum;
-        }
-    }
+
+
     gettimeofday(&tv2, &tz);
     elapsed = (double) (tv2.tv_sec- tv1.tv_sec) + (double) (tv2.tv_usec - tv1.tv_usec) * 1e-6;
     printf("elapsed time = %f seconds. \n", elapsed);
